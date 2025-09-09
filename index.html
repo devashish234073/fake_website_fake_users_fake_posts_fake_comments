@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        .left-panel,
+        .main-content,
+        .right-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-panel,
+        .right-panel {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .main-content {
+            flex: 2;
+            min-height: 500px;
+        }
+
+        h2 {
+            color: #65676b;
+            margin-top: 0;
+        }
+
+        button,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #166fe5;
+        }
+
+        .post-input,
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        #feed,
+        #searchResults,
+        #friendRequests,
+        #friendList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .post {
+            background-color: #f7f8fa;
+            border: 1px solid #e5e6eb;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .post-user {
+            font-weight: bold;
+            color: #1c1e21;
+        }
+
+        .llm-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #llmPrompt {
+            flex: 1;
+        }
+
+        .user-profile {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #loginMessage {
+            text-align: center;
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        #chatWindow {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        #chatHeader {
+            padding: 10px;
+            background-color: #1877f2;
+            color: white;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #chatMessages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chatInput {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            margin-right: 5px;
+        }
+
+        .my-data-container {
+            margin-bottom: 20px;
+        }
+
+        .my-data-container h2 {
+            cursor: pointer;
+            color: #1877f2;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .my-data-container h2:hover {
+            color: #166fe5;
+        }
+
+        .my-data-container h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .notification {
+            background-color: #e7f3ff;
+            border-left: 4px solid #1877f2;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .my-post {
+            background-color: #f0f8ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chatWindow" style="display: none;">
+        <div id="chatHeader">
+            <span id="chatFriendName"></span>
+            <button onclick="closeChat()">Close</button>
+        </div>
+        <div id="chatMessages"></div>
+        <div id="chatInput">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <div id="app" style="display: none;">
+        <div class="container">
+            <div class="left-panel">
+                <div class="user-profile" id="currentUser"></div>
+                <h2>Friends</h2>
+                <ul id="friendList"></ul>
+            </div>
+
+            <div class="main-content">
+                <div class="post-input">
+                    <h2>Create a Post</h2>
+                    <textarea id="postContent" rows="4" placeholder="What's on your mind?"></textarea>
+                    <div class="llm-section">
+                        <input type="text" id="llmPrompt"
+                            placeholder="Generate a post with LLM (e.g., generate a post about cats)">
+                        <button onclick="generatePostFromLLM()">Generate</button>
+                    </div>
+                    <button onclick="createPost()">Post</button>
+                </div>
+
+                <hr>
+                <div class="my-data-container">
+                    <h2 onclick="toggleMyData()">My Posts & Notifications ▼</h2>
+                    <div id="myDataSection" style="display: none;">
+                        <h3>My Posts</h3>
+                        <ul id="myPostsList"></ul>
+                        <h3>Notifications</h3>
+                        <ul id="notificationsList"></ul>
+                    </div>
+                </div>
+                <hr>
+                <h2>Friends' Feed</h2>
+                <ul id="feed"></ul>
+            </div>
+
+            <div class="right-panel">
+                <div class="search-container">
+                    <h2>Search Users</h2>
+                    <input type="text" id="searchInput" placeholder="Search by name">
+                    <button onclick="searchUsers()">Search</button>
+                    <ul id="searchResults"></ul>
+                </div>
+
+                <hr>
+
+                <div class="friend-requests-container">
+                    <h2>Friend Requests</h2>
+                    <ul id="friendRequests"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loginMessage">
+        <p>Please log in by going to: <br>
+            <a href="http://localhost:8080/login?user=dev" id="loginLink">http://localhost:8080/login?user=dev</a>
+        </p>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        const updateUI = () => {
+            document.getElementById('app').style.display = currentUser ? 'flex' : 'none';
+            document.getElementById('loginMessage').style.display = currentUser ? 'none' : 'block';
+            if (currentUser) {
+                document.getElementById('currentUser').textContent = 'Logged in as: ' + currentUser;
+                getFriends();
+                getFriendRequests();
+                getFeed();
+            }
+        };
+
+        const login = () => {
+            const params = new URLSearchParams(window.location.search);
+            const user = params.get('user');
+            if (user) {
+                currentUser = user;
+                updateUI();
+                fetch(`/login?user=${user}`);
+                fetchMyData();
+
+                // Start the copilot 5 seconds after login
+                setTimeout(() => {
+                    copilot.run();
+                }, 5000);
+
+            } else {
+                updateUI();
+            }
+        };
+
+        const searchUsers = () => {
+            const query = document.getElementById('searchInput').value;
+            fetch(`/search?query=${query}&user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    const resultsList = document.getElementById('searchResults');
+                    resultsList.innerHTML = '';
+                    data.results.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user;
+                        const button = document.createElement('button');
+                        button.textContent = 'Add Friend';
+                        button.onclick = () => sendFriendRequest(user);
+                        li.appendChild(button);
+                        resultsList.appendChild(li);
+                    });
+                });
+        };
+
+        const sendFriendRequest = (toUser) => {
+            fetch(`/friend-request?from=${currentUser}&to=${toUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                });
+        };
+
+        const getFriendRequests = () => {
+            fetch(`/get-friend-requests?user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    const requestsList = document.getElementById('friendRequests');
+                    requestsList.innerHTML = '';
+                    data.requests.forEach(requester => {
+                        const li = document.createElement('li');
+                        li.textContent = requester;
+                        const button = document.createElement('button');
+                        button.textContent = 'Accept';
+                        button.onclick = () => acceptFriendRequest(requester);
+                        li.appendChild(button);
+                        requestsList.appendChild(li);
+                    });
+                });
+        };
+
+        const acceptFriendRequest = (requester) => {
+            fetch(`/accept-friend-request?user=${currentUser}&requester=${requester}`)
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    getFriendRequests();
+                    getFriends();
+                    getFeed();
+                });
+        };
+
+        const getFriends = () => {
+            fetch(`/get-friends?user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    const friendsList = document.getElementById('friendList');
+                    friendsList.innerHTML = '';
+                    data.friends.forEach(friend => {
+                        const li = document.createElement('li');
+                        li.textContent = friend;
+                        const chatBtn = document.createElement('button');
+                        chatBtn.textContent = 'Chat';
+                        chatBtn.onclick = () => openChat(friend);
+                        li.appendChild(chatBtn);
+                        friendsList.appendChild(li);
+                    });
+                });
+        };
+
+        const createPost = () => {
+            const content = document.getElementById('postContent').value;
+            if (content.trim()) {
+                fetch(`/create-post?user=${currentUser}&content=${encodeURIComponent(content)}`)
+                    .then(res => res.json())
+                    .then(() => {
+                        document.getElementById('postContent').value = '';
+                        getFeed();
+                    });
+            }
+        };
+
+        const generatePostFromLLM = () => {
+            const prompt = document.getElementById('llmPrompt').value;
+            if (prompt.trim()) {
+                fetch(`/llm-prompt?prompt=${encodeURIComponent(prompt)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('postContent').value = data.response;
+                    });
+            }
+        };
+
+        /*const getFeed = () => {
+            fetch(`/get-feed?user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    const feedList = document.getElementById('feed');
+                    feedList.innerHTML = '';
+                    data.feed.forEach(post => {
+                        const li = document.createElement('li');
+                        li.className = 'post';
+                        li.innerHTML = `<div class="post-user">${post.user}</div><div>${post.content}</div>`;
+                        feedList.appendChild(li);
+                    });
+                });
+        };*/
+
+        const getFeed = () => {
+            fetch(`/get-feed?user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    const feedList = document.getElementById('feed');
+                    feedList.innerHTML = '';
+                    data.feed.forEach(post => {
+                        const li = document.createElement('li');
+                        li.className = 'post';
+                        const commentsHtml = post.comments.map(c => `
+                    <div class="comment"><strong>${c.user}</strong>: ${c.comment}</div>
+                `).join('');
+
+                        li.innerHTML = `
+                    <div class="post-user">${post.user}</div>
+                    <div>${post.content}</div>
+                    <div class="comments-section">
+                        <h4>Comments</h4>
+                        <div class="comments-list">${commentsHtml}</div>
+                        <div class="comment-input">
+                            <input type="text" placeholder="Add a comment..." id="comment-${post.timestamp}">
+                            <button onclick="addComment('${post.timestamp}')">Comment</button>
+                        </div>
+                    </div>
+                `;
+                        feedList.appendChild(li);
+                    });
+                });
+        };
+
+        const addComment = (postId) => {
+            const commentInput = document.getElementById(`comment-${postId}`);
+            const commentContent = commentInput.value;
+            if (commentContent.trim()) {
+                fetch(`/add-comment?postId=${postId}&user=${currentUser}&comment=${encodeURIComponent(commentContent)}`)
+                    .then(res => res.json())
+                    .then(() => {
+                        commentInput.value = '';
+                        getFeed(); // Refresh the feed to show the new comment
+                    });
+            }
+        };
+
+        const toggleMyData = () => {
+            const section = document.getElementById('myDataSection');
+            const header = document.querySelector('.my-data-container h2');
+            if (section.style.display === 'none') {
+                fetchMyData();
+                section.style.display = 'block';
+                header.textContent = 'My Posts & Notifications ▲';
+            } else {
+                section.style.display = 'none';
+                header.textContent = 'My Posts & Notifications ▼';
+            }
+        };
+
+        const fetchMyData = () => {
+            fetch(`/get-my-data?user=${currentUser}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Render My Posts
+                    const myPostsList = document.getElementById('myPostsList');
+                    myPostsList.innerHTML = '';
+                    data.myPosts.forEach(post => {
+                        const li = document.createElement('li');
+                        li.className = 'my-post';
+                        const commentsHtml = post.comments.map(c => `
+                    <div class="comment"><strong>${c.user}</strong>: ${c.comment}</div>
+                `).join('');
+
+                        li.innerHTML = `
+                    <div>${post.content}</div>
+                    <small>Posted on: ${new Date(post.timestamp).toLocaleString()}</small>
+                    <div class="comments-section">
+                        <h4>Comments</h4>
+                        <div class="comments-list">${commentsHtml}</div>
+                        <div class="comment-input">
+                            <input type="text" placeholder="Add a comment..." id="comment-${post.timestamp}">
+                            <button onclick="addComment('${post.timestamp}')">Comment</button>
+                        </div>
+                    </div>
+                `;
+                        myPostsList.appendChild(li);
+                    });
+                    const notificationsList = document.getElementById('notificationsList');
+                    notificationsList.innerHTML = '';
+                    data.notifications.forEach(notification => {
+                        const li = document.createElement('li');
+                        li.className = 'notification';
+                        li.textContent = notification.message;
+                        notificationsList.appendChild(li);
+                    });
+                });
+        };
+
+        let currentChatFriend = null;
+
+        const openChat = (friend) => {
+            currentChatFriend = friend;
+            document.getElementById('chatWindow').style.display = 'flex';
+            document.getElementById('chatFriendName').textContent = friend;
+            loadChatMessages();
+        };
+
+        const closeChat = () => {
+            document.getElementById('chatWindow').style.display = 'none';
+            currentChatFriend = null;
+        };
+
+        const loadChatMessages = () => {
+            if (!currentChatFriend) return;
+            fetch(`/get-messages?user=${currentUser}&friend=${currentChatFriend}`)
+                .then(res => res.json())
+                .then(data => {
+                    const chatMessagesDiv = document.getElementById('chatMessages');
+                    chatMessagesDiv.innerHTML = '';
+                    data.chat.forEach(message => {
+                        const p = document.createElement('p');
+                        p.textContent = `${message.from}: ${message.content}`;
+                        chatMessagesDiv.appendChild(p);
+                    });
+                    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+                });
+        };
+
+        const sendMessage = () => {
+            const messageContent = document.getElementById('messageInput').value;
+            if (messageContent.trim() && currentChatFriend) {
+                fetch(`/send-message?from=${currentUser}&to=${currentChatFriend}&content=${encodeURIComponent(messageContent)}`)
+                    .then(res => res.json())
+                    .then(() => {
+                        document.getElementById('messageInput').value = '';
+                        loadChatMessages(); // Refresh chat
+                    });
+            }
+        };
+
+        const copilot = {
+            // Action 1: Find a random friend and send a request
+            findAndAddFriend: async () => {
+                const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+                let sent = false;
+                let tryCount = 0;
+                while (!sent && tryCount < 10) {
+                    const randomChar = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    const res = await fetch(`/search?query=${randomChar}&user=${currentUser}`);
+                    const data = await res.json();
+                    if (data.results.length > 0) {
+                        const friendToRequest = data.results[Math.floor(Math.random() * data.results.length)];
+                        const reqRes = await fetch(`/friend-request?from=${currentUser}&to=${friendToRequest}`);
+                        const reqData = await reqRes.json();
+                        console.log(`Copilot: Sent a friend request to ${friendToRequest}.`, reqData.message);
+                        sent = true;
+                    } else {
+                        console.log("Copilot: No new friends to add with that letter.");
+                        tryCount++;
+                    }
+                }
+            },
+
+            acceptAllFriendRequests: async () => {
+                const res = await fetch(`/get-friend-requests?user=${currentUser}`);
+                const data = await res.json();
+                if (data.requests.length > 0) {
+                    for (const requester of data.requests) {
+                        const acceptRes = await fetch(`/accept-friend-request?user=${currentUser}&requester=${requester}`);
+                        const acceptData = await acceptRes.json();
+                        console.log(`Copilot: Accepted friend request from ${requester}.`, acceptData.message);
+                    }
+                    // Refresh the UI after accepting requests
+                    getFriendRequests();
+                    getFriends();
+                    getFeed();
+                } else {
+                    console.log("Copilot: No new friend requests to accept.");
+                }
+            },
+
+            // Action 2: Create a post using an LLM idea
+            createLLMPost: async () => {
+                console.log("Copilot: Asking LLM for a post idea...");
+                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying"];
+                const res = await fetch('/ollama-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: "Suggest a short, under 40-word post idea for social media on " + topics[Math.floor(Math.random() * topics.length)] })
+                });
+                const data = await res.json();
+                const postContent = data.response.trim().replace(/^"|"$/g, '');
+                if (postContent) {
+                    const postRes = await fetch(`/create-post?user=${currentUser}&content=${encodeURIComponent(postContent)}`);
+                    const postData = await postRes.json();
+                    console.log("Copilot: Created a new post.", postData.message);
+                }
+            },
+
+            // Action 3: Comment on a friend's post with an LLM-generated reply
+            commentOnFriendPost: async () => {
+                const res = await fetch(`/get-feed?user=${currentUser}`);
+                const data = await res.json();
+                if (data.feed.length > 0) {
+                    const postToComment = data.feed[Math.floor(Math.random() * data.feed.length)];
+                    const llmPrompt = `You are ${currentUser}. Write a short comment (under 40 words) in reply to this post: "${postToComment.content}". Include the existing comments for context: ${JSON.stringify(postToComment.comments)}`;
+
+                    const llmRes = await fetch('/ollama-prompt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: llmPrompt })
+                    });
+                    const llmData = await llmRes.json();
+                    const commentContent = llmData.response.trim().replace(/^"|"$/g, '');
+
+                    const commentRes = await fetch(`/add-comment?postId=${postToComment.timestamp}&user=${currentUser}&comment=${encodeURIComponent(commentContent)}`);
+                    const commentData = await commentRes.json();
+                    console.log(`Copilot: Commented on a post from ${postToComment.user}.`, commentData.message);
+                    getFeed();
+                } else {
+                    console.log("Copilot: No friends' posts to comment on.");
+                }
+            },
+
+            // Action 4: Message a friend
+            messageFriend: async () => {
+                const friendsRes = await fetch(`/get-friends?user=${currentUser}`);
+                const friendsData = await friendsRes.json();
+                if (friendsData.friends.length > 0) {
+                    const friendToMessage = friendsData.friends[Math.floor(Math.random() * friendsData.friends.length)];
+                    const llmPrompt = `You are ${currentUser}. Write a short, friendly message (under 40 words) to ${friendToMessage}.`;
+
+                    const llmRes = await fetch('/ollama-prompt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: llmPrompt })
+                    });
+                    const llmData = await llmRes.json();
+                    const messageContent = llmData.response.trim().replace(/^"|"$/g, '');
+
+                    const msgRes = await fetch(`/send-message?from=${currentUser}&to=${friendToMessage}&content=${encodeURIComponent(messageContent)}`);
+                    const msgData = await msgRes.json();
+                    console.log(`Copilot: Sent a message to ${friendToMessage}.`, msgData.message);
+                } else {
+                    console.log("Copilot: No friends to message.");
+                }
+            },
+
+            // Main function to run the copilot
+            run: async () => {
+                console.log("Copilot: Performing a random action...");
+                const actions = [
+                    copilot.findAndAddFriend,
+                    copilot.createLLMPost,
+                    copilot.commentOnFriendPost,
+                    copilot.messageFriend,
+                    copilot.acceptAllFriendRequests
+                ];
+                const randomAction = actions[Math.floor(Math.random() * actions.length)];
+                console.log("Copilot: Selected action -", randomAction.name);
+                await randomAction();
+            }
+        };
+
+        // Add to window.onload for real-time updates (optional but good)
+        setInterval(loadChatMessages, 3000);
+
+        window.onload = login;
+    </script>
+    <script>
+        setTimeout(function () {
+            location.reload();
+        }, 15000);
+    </script>
+</body>
+
+</html>
