@@ -289,13 +289,18 @@
             }
         };
 
+        let gender = 'M';
+        let profession = 'Developer';
+
         const login = () => {
             const params = new URLSearchParams(window.location.search);
             const user = params.get('user');
+            gender = params.get('gender') || 'M';
+            profession = params.get('profession') || 'Developer';
             if (user) {
                 currentUser = user;
                 updateUI();
-                fetch(`/login?user=${user}`);
+                fetch(`/login?user=${user}&gender=${gender}&profession=${profession}`);
                 fetchMyData();
 
                 // Start the copilot 5 seconds after login
@@ -601,11 +606,11 @@
             // Action 2: Create a post using an LLM idea
             createLLMPost: async () => {
                 console.log("Copilot: Asking LLM for a post idea...");
-                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying"];
+                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying","motivation","fitness","health","travel","shorts video addiction","beauty products"];
                 const res = await fetch('/ollama-prompt', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: "Suggest a short, under 40-word post idea for social media on " + topics[Math.floor(Math.random() * topics.length)] })
+                    body: JSON.stringify({ gender , profession, prompt: "Suggest a short, under 60-word post idea for social media on " + topics[Math.floor(Math.random() * topics.length)] + ` for a ${gender=="F"?"Female":"Male"} who is ${profession} by profession`})
                 });
                 const data = await res.json();
                 const postContent = data.response.trim().replace(/^"|"$/g, '');

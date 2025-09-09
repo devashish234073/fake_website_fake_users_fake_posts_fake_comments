@@ -20,6 +20,12 @@ const mockLLM = (prompt) => {
     });
 };
 
+let olderContent = "[]";
+if (fs.existsSync("posts.json")) {
+    olderContent = fs.readFileSync("posts.json", "utf-8");
+}
+let olderContentJson = JSON.parse(olderContent);
+
 const handleRequest = async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
@@ -32,9 +38,11 @@ const handleRequest = async (req, res) => {
         res.end(fs.readFileSync('index.html'));
     } else if (path === '/login') {
         const user = query.user;
+        const gender = query.gender || 'M';
+        const profession = query.profession || 'Developer';
         if (user) {
             if (!users[user]) {
-                users[user] = { name: user };
+                users[user] = { name: user, gender, profession };
                 posts[user] = [];
                 friends[user] = [];
                 friendRequests[user] = [];
@@ -197,8 +205,7 @@ const handleRequest = async (req, res) => {
                 body += chunk.toString();
             });
             req.on('end', async () => {
-                const { prompt } = JSON.parse(body);
-
+                const { prompt, gender, profession } = JSON.parse(body);
                 try {
                     const ollamaResponse = await new Promise((resolve, reject) => {
                         const postData = JSON.stringify({
@@ -228,7 +235,8 @@ const handleRequest = async (req, res) => {
                                 try {
                                     const jsonResponse = JSON.parse(data);
                                     let fromLLM = jsonResponse.response;
-                                    console.log("response from llm",fromLLM);
+                                    console.log("response from llm", fromLLM);
+                                    olderContentJson.push({ prompt, response: fromLLM, gender, profession });
                                     resolve(fromLLM);
                                 } catch (e) {
                                     reject(new Error('Failed to parse Ollama response'));
@@ -241,7 +249,7 @@ const handleRequest = async (req, res) => {
                             reject(e);
                         });
 
-                        console.log("request sent to llm",postData);
+                        console.log("request sent to llm", postData);
                         ollamaReq.write(postData);
                         ollamaReq.end();
                     });
@@ -261,6 +269,10 @@ const handleRequest = async (req, res) => {
         }
     }
 };
+
+setInterval(() => {
+    fs.writeFileSync("posts.json", JSON.stringify(olderContentJson, null, 2));
+}, 60000);
 
 const server = http.createServer(handleRequest);
 
