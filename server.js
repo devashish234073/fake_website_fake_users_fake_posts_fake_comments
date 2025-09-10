@@ -50,7 +50,7 @@ const handleRequest = async (req, res) => {
             }
             // Redirect the user back to the main page
             res.writeHead(302, {
-                'Location': `/?user=${user}`
+                'Location': `/?user=${user}&gender=${gender}&profession=${profession}`
             });
             res.end();
         } else {

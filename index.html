@@ -271,14 +271,14 @@
     </div>
     <div id="loginMessage">
         <p>Please log in by going to: <br>
-            <a href="http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper" id="loginLink">http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper</a><br>
-            <a href="http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper" id="loginLink">http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper</a><br>
-            <a href="http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer" id="loginLink">http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer</a><br>
-            <a href="http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer" id="loginLink">http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer</a><br>
-            <a href="http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor" id="loginLink">http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor</a><br>
-            <a href="http://localhost:8080/login?user=east&gender=F&profession=Doctor" id="loginLink">http://localhost:8080/login?user=east&gender=F&profession=Doctor</a><br>
-            <a href="http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer" id="loginLink">http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer</a><br>
-            <a href="http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer" id="loginLink">http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer</a><br>
+            <a href="http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper" target="_blank" id="loginLink">http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper" target="_blank" id="loginLink">http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer" target="_blank" id="loginLink">http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer" target="_blank" id="loginLink">http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor" target="_blank" id="loginLink">http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=east&gender=F&profession=Doctor" target="_blank" id="loginLink">http://localhost:8080/login?user=east&gender=F&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer" target="_blank" id="loginLink">http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer</a><br>
+            <a href="http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer" target="_blank" id="loginLink">http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer</a><br>
         </p>
     </div>
 
@@ -683,9 +683,14 @@
                 console.log("Copilot: Performing a random action...");
                 const actions = [
                     copilot.findAndAddFriend,
+                    copilot.findAndAddFriend,
                     copilot.createLLMPost,
                     copilot.commentOnFriendPost,
+                    copilot.commentOnFriendPost,
+                    copilot.commentOnFriendPost,
                     copilot.messageFriend,
+                    copilot.acceptAllFriendRequests,
+                    copilot.acceptAllFriendRequests,
                     copilot.acceptAllFriendRequests
                 ];
                 const randomAction = actions[Math.floor(Math.random() * actions.length)];
