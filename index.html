@@ -218,6 +218,14 @@
         </div>
     </div>
     <div id="app" style="display: none;">
+        <!-- API Call Counts Popup -->
+        <div id="apiCallCountsPopup" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#fff;border:1px solid #1877f2;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;padding:12px 18px;min-width:220px;max-width:350px;transition:all 0.2s;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-weight:bold;color:#1877f2;">API Call Counts</span>
+                <button id="toggleApiCountsBtn" style="background:#1877f2;color:#fff;border:none;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:13px;">Hide</button>
+            </div>
+            <div id="apiCallCountsDisplay" style="font-size:13px;margin-top:8px;"></div>
+        </div>
         <div class="container">
             <div class="left-panel">
                 <div class="user-profile" id="currentUser"></div>
@@ -285,6 +293,39 @@
     <script>
         let currentUser = null;
 
+        let apiCountsExpanded = true;
+        const updateApiCallCounts = (counts) => {
+            const display = document.getElementById('apiCallCountsDisplay');
+            if (!counts) { display.textContent = 'No data.'; return; }
+            display.innerHTML = `<table style='width:100%;border-collapse:collapse;'>` +
+                Object.entries(counts).map(([path, count]) =>
+                    `<tr><td style='padding:2px 6px;border-bottom:1px solid #eee;'><b style='color:#333;'>${path}</b></td><td style='padding:2px 6px;text-align:right;color:#1877f2;'>${count}</td></tr>`
+                ).join('') + `</table>`;
+        };
+
+        function toggleApiCountsPopup() {
+            const popup = document.getElementById('apiCallCountsPopup');
+            const btn = document.getElementById('toggleApiCountsBtn');
+            apiCountsExpanded = !apiCountsExpanded;
+            if (apiCountsExpanded) {
+                popup.style.height = '';
+                popup.style.minHeight = '80px';
+                popup.style.maxHeight = '';
+                document.getElementById('apiCallCountsDisplay').style.display = '';
+                btn.textContent = 'Hide';
+            } else {
+                popup.style.height = '38px';
+                popup.style.minHeight = '38px';
+                popup.style.maxHeight = '38px';
+                document.getElementById('apiCallCountsDisplay').style.display = 'none';
+                btn.textContent = 'Show';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('toggleApiCountsBtn').onclick = toggleApiCountsPopup;
+        });
+
         const updateUI = () => {
             document.getElementById('app').style.display = currentUser ? 'flex' : 'none';
             document.getElementById('loginMessage').style.display = currentUser ? 'none' : 'block';
@@ -293,7 +334,14 @@
                 getFriends();
                 getFriendRequests();
                 getFeed();
+                fetchApiCallCounts();
             }
+        };
+
+        const fetchApiCallCounts = () => {
+            fetch('/api/call-counts')
+                .then(res => res.json())
+                .then(data => updateApiCallCounts(data.apiCallCounts));
         };
 
         let gender = 'M';
@@ -336,6 +384,7 @@
                         li.appendChild(button);
                         resultsList.appendChild(li);
                     });
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -344,6 +393,7 @@
                 .then(res => res.json())
                 .then(data => {
                     alert(data.message);
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -362,6 +412,7 @@
                         li.appendChild(button);
                         requestsList.appendChild(li);
                     });
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -373,6 +424,7 @@
                     getFriendRequests();
                     getFriends();
                     getFeed();
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -391,6 +443,7 @@
                         li.appendChild(chatBtn);
                         friendsList.appendChild(li);
                     });
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -399,9 +452,10 @@
             if (content.trim()) {
                 fetch(`/create-post?user=${currentUser}&content=${encodeURIComponent(content)}`)
                     .then(res => res.json())
-                    .then(() => {
+                    .then(data => {
                         document.getElementById('postContent').value = '';
                         getFeed();
+                        updateApiCallCounts(data.apiCallCounts);
                     });
             }
         };
@@ -459,6 +513,7 @@
                 `;
                         feedList.appendChild(li);
                     });
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 
@@ -468,9 +523,10 @@
             if (commentContent.trim()) {
                 fetch(`/add-comment?postId=${postId}&user=${currentUser}&comment=${encodeURIComponent(commentContent)}`)
                     .then(res => res.json())
-                    .then(() => {
+                    .then(data => {
                         commentInput.value = '';
                         getFeed(); // Refresh the feed to show the new comment
+                        updateApiCallCounts(data.apiCallCounts);
                     });
             }
         };
@@ -524,6 +580,7 @@
                         li.textContent = notification.message;
                         notificationsList.appendChild(li);
                     });
+                    updateApiCallCounts(data.apiCallCounts);
                 });
         };
 

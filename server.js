@@ -29,14 +29,23 @@ let olderContentJson = JSON.parse(olderContent);
 const messages = {};
 const notifications = {};
 
+// Track API call counts
+const apiCallCounts = {};
+
 const handleRequest = async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const query = parsedUrl.query;
 
+    // Increment call count for this path
+    apiCallCounts[path] = (apiCallCounts[path] || 0) + 1;
+
     if (path === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(fs.readFileSync('index.html'));
+    } else if (path === '/api/call-counts') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ apiCallCounts }));
     } else if (path === '/login') {
         const user = query.user;
         const gender = query.gender || 'M';
@@ -63,23 +72,23 @@ const handleRequest = async (req, res) => {
         const results = Object.keys(users).filter(u =>
             u.toLowerCase().startsWith(queryTerm) && u !== currentUser && !friends[currentUser].includes(u)
         );
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ results }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ results, apiCallCounts }));
     } else if (path === '/friend-request') {
         const { from, to } = query;
         console.log(`Friend request from ${from} to ${to}`);
         if (from !== to && users[to] && !friendRequests[to].includes(from) && !friends[from].includes(to)) {
             friendRequests[to].push(from);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Friend request sent' }));
+            res.end(JSON.stringify({ message: 'Friend request sent', apiCallCounts }));
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Could not send friend request' }));
+            res.end(JSON.stringify({ message: 'Could not send friend request', apiCallCounts }));
         }
     } else if (path === '/get-friend-requests') {
         const { user } = query;
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ requests: friendRequests[user] || [] }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ requests: friendRequests[user] || [], apiCallCounts }));
     } else if (path === '/accept-friend-request') {
         const { user, requester } = query;
         console.log(`Accepting friend request from ${requester} to ${user}`);
@@ -89,24 +98,24 @@ const handleRequest = async (req, res) => {
             friends[user].push(requester);
             friends[requester].push(user);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Friend request accepted' }));
+            res.end(JSON.stringify({ message: 'Friend request accepted', apiCallCounts }));
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid request' }));
+            res.end(JSON.stringify({ message: 'Invalid request', apiCallCounts }));
         }
     } else if (path === '/get-friends') {
         const { user } = query;
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ friends: friends[user] || [] }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ friends: friends[user] || [], apiCallCounts }));
     } else if (path === '/create-post') {
         const { user, content } = query;
         if (users[user] && content) {
             posts[user].push({ content, timestamp: new Date().toISOString(), comments: [] });
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Post created' }));
+            res.end(JSON.stringify({ message: 'Post created', apiCallCounts }));
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid post data' }));
+            res.end(JSON.stringify({ message: 'Invalid post data', apiCallCounts }));
         }
     } else if (path === '/get-feed') {
         const { user } = query;
@@ -118,22 +127,22 @@ const handleRequest = async (req, res) => {
             }
         });
         feedPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ feed: feedPosts }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ feed: feedPosts, apiCallCounts }));
     } else if (path === '/llm-prompt') {
         const { prompt } = query;
         if (prompt) {
             try {
                 const llmResponse = await mockLLM(prompt);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ response: llmResponse }));
+                res.end(JSON.stringify({ response: llmResponse, apiCallCounts }));
             } catch (error) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'LLM request failed' }));
+                res.end(JSON.stringify({ error: 'LLM request failed', apiCallCounts }));
             }
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Prompt is missing' }));
+            res.end(JSON.stringify({ error: 'Prompt is missing', apiCallCounts }));
         }
     } else if (path === '/send-message') {
         const { from, to, content } = query;
@@ -150,17 +159,17 @@ const handleRequest = async (req, res) => {
             console.log("messages after sending",messages);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Message sent' }));
+            res.end(JSON.stringify({ message: 'Message sent', apiCallCounts }));
         } else {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid message data' }));
+            res.end(JSON.stringify({ message: 'Invalid message data', apiCallCounts }));
         }
     } else if (path === '/get-messages') {
         const { user, friend } = query;
         console.log("all messages",messages);
         const chat = (messages[user] && messages[user][friend]) || [];
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ chat }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ chat, apiCallCounts }));
     } else if (path === '/add-comment') {
         const { postId, user, comment } = query;
         const postOwner = Object.keys(posts).find(owner =>
@@ -180,10 +189,10 @@ const handleRequest = async (req, res) => {
             });
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Comment added' }));
+            res.end(JSON.stringify({ message: 'Comment added', apiCallCounts }));
         } else {
             res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Post not found' }));
+            res.end(JSON.stringify({ message: 'Post not found', apiCallCounts }));
         }
     } else if (path === '/get-my-data') {
         const { user } = query;
@@ -199,7 +208,8 @@ const handleRequest = async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             myPosts: userPosts,
-            notifications: userNotifications
+            notifications: userNotifications,
+            apiCallCounts
         }));
     } else if (path === '/ollama-prompt') {
         if (req.method === 'POST') {
@@ -258,12 +268,12 @@ const handleRequest = async (req, res) => {
                     });
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ response: ollamaResponse }));
+                    res.end(JSON.stringify({ response: ollamaResponse, apiCallCounts }));
 
                 } catch (error) {
                     console.error('Ollama request failed:', error);
                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'LLM request failed' }));
+                    res.end(JSON.stringify({ error: 'LLM request failed', apiCallCounts }));
                 }
             });
         } else {
