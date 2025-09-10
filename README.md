@@ -14,6 +14,7 @@ Then in browser go to http://localhost:8080/?user=deva to create and login as us
 
 You can add as many tab as the number of parallel users you need example http://localhost:8080/?user=deva2 in new tab
 
-<img width="1777" height="974" alt="image" src="https://github.com/user-attachments/assets/e29a988a-5c2a-47c7-b958-8040c01059a1" />
+<img width="1787" height="965" alt="image" src="https://github.com/user-attachments/assets/edab1708-85c7-44d5-99af-cacc45bdb26e" />
+
 
 
