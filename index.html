@@ -229,11 +229,11 @@
                 <div class="post-input">
                     <h2>Create a Post</h2>
                     <textarea id="postContent" rows="4" placeholder="What's on your mind?"></textarea>
-                    <div class="llm-section">
+                    <!--<div class="llm-section">
                         <input type="text" id="llmPrompt"
                             placeholder="Generate a post with LLM (e.g., generate a post about cats)">
                         <button onclick="generatePostFromLLM()">Generate</button>
-                    </div>
+                    </div>-->
                     <button onclick="createPost()">Post</button>
                 </div>
 
@@ -271,7 +271,14 @@
     </div>
     <div id="loginMessage">
         <p>Please log in by going to: <br>
-            <a href="http://localhost:8080/login?user=dev" id="loginLink">http://localhost:8080/login?user=dev</a>
+            <a href="http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper" id="loginLink">http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper" id="loginLink">http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer" id="loginLink">http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer" id="loginLink">http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor" id="loginLink">http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=east&gender=F&profession=Doctor" id="loginLink">http://localhost:8080/login?user=east&gender=F&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer" id="loginLink">http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer</a><br>
+            <a href="http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer" id="loginLink">http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer</a><br>
         </p>
     </div>
 
@@ -399,7 +406,7 @@
             }
         };
 
-        const generatePostFromLLM = () => {
+        /*const generatePostFromLLM = () => {
             const prompt = document.getElementById('llmPrompt').value;
             if (prompt.trim()) {
                 fetch(`/llm-prompt?prompt=${encodeURIComponent(prompt)}`)
@@ -408,7 +415,7 @@
                         document.getElementById('postContent').value = data.response;
                     });
             }
-        };
+        };*/
 
         /*const getFeed = () => {
             fetch(`/get-feed?user=${currentUser}`)
@@ -539,6 +546,7 @@
             fetch(`/get-messages?user=${currentUser}&friend=${currentChatFriend}`)
                 .then(res => res.json())
                 .then(data => {
+                    console.log("got messages",data);
                     const chatMessagesDiv = document.getElementById('chatMessages');
                     chatMessagesDiv.innerHTML = '';
                     data.chat.forEach(message => {

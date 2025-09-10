@@ -26,12 +26,13 @@ if (fs.existsSync("posts.json")) {
 }
 let olderContentJson = JSON.parse(olderContent);
 
+const messages = {};
+const notifications = {};
+
 const handleRequest = async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const query = parsedUrl.query;
-    const messages = {};
-    const notifications = {};
 
     if (path === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -146,6 +147,7 @@ const handleRequest = async (req, res) => {
             const message = { from, content, timestamp: new Date().toISOString() };
             messages[from][to].push(message);
             messages[to][from].push(message); // Store for both users
+            console.log("messages after sending",messages);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Message sent' }));
@@ -155,6 +157,7 @@ const handleRequest = async (req, res) => {
         }
     } else if (path === '/get-messages') {
         const { user, friend } = query;
+        console.log("all messages",messages);
         const chat = (messages[user] && messages[user][friend]) || [];
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ chat }));
