@@ -219,10 +219,12 @@
     </div>
     <div id="app" style="display: none;">
         <!-- API Call Counts Popup -->
-        <div id="apiCallCountsPopup" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#fff;border:1px solid #1877f2;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;padding:12px 18px;min-width:220px;max-width:350px;transition:all 0.2s;">
+        <div id="apiCallCountsPopup"
+            style="position:fixed;bottom:20px;left:20px;z-index:9999;background:#fff;border:1px solid #1877f2;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;padding:12px 18px;min-width:220px;max-width:350px;transition:all 0.2s;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <span style="font-weight:bold;color:#1877f2;">API Call Counts</span>
-                <button id="toggleApiCountsBtn" style="background:#1877f2;color:#fff;border:none;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:13px;">Hide</button>
+                <button id="toggleApiCountsBtn"
+                    style="background:#1877f2;color:#fff;border:none;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:13px;">Hide</button>
             </div>
             <div id="apiCallCountsDisplay" style="font-size:13px;margin-top:8px;"></div>
         </div>
@@ -279,14 +281,22 @@
     </div>
     <div id="loginMessage">
         <p>Please log in by going to: <br>
-            <a href="http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper" target="_blank" id="loginLink">http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper</a><br>
-            <a href="http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper" target="_blank" id="loginLink">http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper</a><br>
-            <a href="http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer" target="_blank" id="loginLink">http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer</a><br>
-            <a href="http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer" target="_blank" id="loginLink">http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer</a><br>
-            <a href="http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor" target="_blank" id="loginLink">http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor</a><br>
-            <a href="http://localhost:8080/login?user=east&gender=F&profession=Doctor" target="_blank" id="loginLink">http://localhost:8080/login?user=east&gender=F&profession=Doctor</a><br>
-            <a href="http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer" target="_blank" id="loginLink">http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer</a><br>
-            <a href="http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer" target="_blank" id="loginLink">http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer</a><br>
+            <a href="http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=dev&gender=M&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=ujala&gender=F&profession=ApplicationDeveloper</a><br>
+            <a href="http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=kartoos&gender=M&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=parchhayi&gender=F&profession=Labourer</a><br>
+            <a href="http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=aparichit&gender=M&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=east&gender=F&profession=Doctor" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=east&gender=F&profession=Doctor</a><br>
+            <a href="http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=ajnaba&gender=M&profession=Influencer</a><br>
+            <a href="http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer" target="_blank"
+                id="loginLink">http://localhost:8080/login?user=ajnabi&gender=F&profession=Influencer</a><br>
         </p>
     </div>
 
@@ -322,7 +332,7 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             document.getElementById('toggleApiCountsBtn').onclick = toggleApiCountsPopup;
         });
 
@@ -603,7 +613,7 @@
             fetch(`/get-messages?user=${currentUser}&friend=${currentChatFriend}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log("got messages",data);
+                    console.log("got messages", data);
                     const chatMessagesDiv = document.getElementById('chatMessages');
                     chatMessagesDiv.innerHTML = '';
                     data.chat.forEach(message => {
@@ -671,11 +681,14 @@
             // Action 2: Create a post using an LLM idea
             createLLMPost: async () => {
                 console.log("Copilot: Asking LLM for a post idea...");
-                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying","motivation","fitness","health","travel","shorts video addiction","beauty products"];
+                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying", "motivation", "fitness", "health", "travel", "shorts video addiction", "beauty products"];
+                let topic = topics[Math.floor(Math.random() * topics.length)];
+                const llmPrompt = `You are a ${profession} who is a ${gender === 'M' ? 'male' : 'female'}. Write a short, personal post (under 60 words) on the topic of "${topic}" for a social media feed. The post should sound like a real person, not a bot. Do not use hashtags that are direct copies of the profession or gender.`;
                 const res = await fetch('/ollama-prompt', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gender , profession, prompt: "Suggest a short, under 60-word post idea for social media on " + topics[Math.floor(Math.random() * topics.length)] + ` for a ${gender=="F"?"Female":"Male"} who is ${profession} by profession`})
+                    body: JSON.stringify({ gender, profession, prompt: llmPrompt, type: "post" })
+                    //body: JSON.stringify({ gender , profession, prompt: "Suggest a short, under 60-word post idea for social media on " + topics[Math.floor(Math.random() * topics.length)] + ` for a ${gender=="F"?"Female":"Male"} who is ${profession} by profession`})
                 });
                 const data = await res.json();
                 const postContent = data.response.trim().replace(/^"|"$/g, '');
@@ -692,12 +705,13 @@
                 const data = await res.json();
                 if (data.feed.length > 0) {
                     const postToComment = data.feed[Math.floor(Math.random() * data.feed.length)];
-                    const llmPrompt = `You are ${currentUser}. Write a short comment (under 40 words) in reply to this post: "${postToComment.content}". Include the existing comments for context: ${JSON.stringify(postToComment.comments)}`;
+                    //const llmPrompt = `You are ${currentUser}. Write a short comment (under 40 words) in reply to this post: "${postToComment.content}". Include the existing comments for context: ${JSON.stringify(postToComment.comments)}`;
+                    const llmPrompt = `You are ${currentUser}, a ${profession}. A friend named ${postToComment.user} posted this: "${postToComment.content}". Write a concise and natural-sounding comment (under 40 words) that responds to their post. Do not copy their post content or hashtags. Focus on building a connection or adding a new thought.`;
 
                     const llmRes = await fetch('/ollama-prompt', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: llmPrompt })
+                        body: JSON.stringify({ prompt: llmPrompt, type: "comment"})
                     });
                     const llmData = await llmRes.json();
                     const commentContent = llmData.response.trim().replace(/^"|"$/g, '');
@@ -712,17 +726,81 @@
             },
 
             // Action 4: Message a friend
+            // Action 4: Message a friend
             messageFriend: async () => {
+                console.log("Copilot: Checking for new messages from friends to reply to...");
+
+                // Step 1: Check for existing conversations with new messages
+                const friendsRes = await fetch(`/get-friends?user=${currentUser}`);
+                const friendsData = await friendsRes.json();
+
+                const friendsWithNewMessages = [];
+
+                // Find friends who have sent the last message
+                for (const friend of friendsData.friends) {
+                    const chatRes = await fetch(`/get-messages?user=${currentUser}&friend=${friend}`);
+                    const chatData = await chatRes.json();
+                    const chat = chatData.chat;
+
+                    if (chat.length > 0) {
+                        const lastMessage = chat[chat.length - 1];
+                        if (lastMessage.from === friend) {
+                            friendsWithNewMessages.push({
+                                name: friend,
+                                lastMessage: lastMessage.content
+                            });
+                        }
+                    }
+                }
+
+                let friendToMessage;
+                let llmPrompt;
+
+                if (friendsWithNewMessages.length > 0) {
+                    // Step 2: If there are new messages, pick one friend and reply to their message
+                    const replyTarget = friendsWithNewMessages[Math.floor(Math.random() * friendsWithNewMessages.length)];
+                    friendToMessage = replyTarget.name;
+                    const lastMessageContent = replyTarget.lastMessage;
+
+                    console.log(`Copilot: Replying to a message from ${friendToMessage}. Last message was: "${lastMessageContent}"`);
+                    llmPrompt = `You are ${currentUser}, an ${profession}. Your friend, ${friendToMessage}, just sent you the following message: "${lastMessageContent}". Write a short, natural reply (under 40 words) to continue the conversation.`;
+                } else {
+                    // Step 3: If no new messages, continue with the existing logic of messaging a random friend
+                    if (friendsData.friends.length > 0) {
+                        friendToMessage = friendsData.friends[Math.floor(Math.random() * friendsData.friends.length)];
+                        console.log(`Copilot: No new messages found. Starting a new chat with ${friendToMessage}.`);
+                        llmPrompt = `You are ${currentUser}, an ${profession}. Write a friendly and informal message (under 40 words) to your friend, ${friendToMessage}. The message should sound like a genuine person.`;
+                    } else {
+                        console.log("Copilot: No friends to message.");
+                        return; // Exit the function if there are no friends
+                    }
+                }
+
+                // Step 4: Send the prompt to the LLM and send the message
+                const llmRes = await fetch('/ollama-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: llmPrompt, type: "message" })
+                });
+                const llmData = await llmRes.json();
+                const messageContent = llmData.response.trim().replace(/^"|"$/g, '');
+
+                const msgRes = await fetch(`/send-message?from=${currentUser}&to=${friendToMessage}&content=${encodeURIComponent(messageContent)}`);
+                const msgData = await msgRes.json();
+                console.log(`Copilot: Sent a message to ${friendToMessage}.`, msgData.message);
+            },
+            messageFriendOld: async () => {
                 const friendsRes = await fetch(`/get-friends?user=${currentUser}`);
                 const friendsData = await friendsRes.json();
                 if (friendsData.friends.length > 0) {
                     const friendToMessage = friendsData.friends[Math.floor(Math.random() * friendsData.friends.length)];
-                    const llmPrompt = `You are ${currentUser}. Write a short, friendly message (under 40 words) to ${friendToMessage}.`;
+                    const llmPrompt = `You are ${currentUser}, a ${profession}. Write a friendly and informal message (under 40 words) to your friend, ${friendToMessage}. The message should sound like a genuine person.`;
+                    //const llmPrompt = `You are ${currentUser}. Write a short, friendly message (under 40 words) to ${friendToMessage}.`;
 
                     const llmRes = await fetch('/ollama-prompt', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: llmPrompt })
+                        body: JSON.stringify({ prompt: llmPrompt, type: "message" })
                     });
                     const llmData = await llmRes.json();
                     const messageContent = llmData.response.trim().replace(/^"|"$/g, '');
@@ -740,14 +818,12 @@
                 console.log("Copilot: Performing a random action...");
                 const actions = [
                     copilot.findAndAddFriend,
-                    copilot.findAndAddFriend,
+                    copilot.createLLMPost,
                     copilot.createLLMPost,
                     copilot.commentOnFriendPost,
                     copilot.commentOnFriendPost,
                     copilot.commentOnFriendPost,
                     copilot.messageFriend,
-                    copilot.acceptAllFriendRequests,
-                    copilot.acceptAllFriendRequests,
                     copilot.acceptAllFriendRequests
                 ];
                 const randomAction = actions[Math.floor(Math.random() * actions.length)];
@@ -762,8 +838,11 @@
         window.onload = login;
     </script>
     <script>
+        sessionStorage.setItem('reload_after_15_second', true);
         setTimeout(function () {
-            location.reload();
+            if(sessionStorage.getItem('reload_after_15_second')) {
+                location.reload();
+            }
         }, 15000);
     </script>
 </body>

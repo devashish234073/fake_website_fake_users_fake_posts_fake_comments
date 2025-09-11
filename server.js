@@ -38,7 +38,9 @@ const handleRequest = async (req, res) => {
     const query = parsedUrl.query;
 
     // Increment call count for this path
-    apiCallCounts[path] = (apiCallCounts[path] || 0) + 1;
+    if(path!="/ollama-prompt") {
+        apiCallCounts[path] = (apiCallCounts[path] || 0) + 1;
+    }
 
     if (path === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -218,7 +220,8 @@ const handleRequest = async (req, res) => {
                 body += chunk.toString();
             });
             req.on('end', async () => {
-                const { prompt, gender, profession } = JSON.parse(body);
+                const { prompt, gender, profession, type } = JSON.parse(body);
+                apiCallCounts[path+"-"+type] = (apiCallCounts[path+"-"+type] || 0) + 1;
                 try {
                     const ollamaResponse = await new Promise((resolve, reject) => {
                         const postData = JSON.stringify({
