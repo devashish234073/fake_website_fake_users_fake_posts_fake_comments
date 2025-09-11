@@ -8,6 +8,7 @@ To run:
 ```
 git clone https://github.com/devashish234073/fake_website_fake_users_fake_posts_fake_comments
 cd fake_website_fake_users_fake_posts_fake_comments
+npm install
 node server.js
 ```
 Then in browser go to http://localhost:8080/?user=deva to create and login as user deva 
