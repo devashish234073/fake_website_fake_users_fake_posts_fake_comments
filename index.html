@@ -618,7 +618,7 @@
                     chatMessagesDiv.innerHTML = '';
                     data.chat.forEach(message => {
                         const p = document.createElement('p');
-                        p.textContent = `${message.from}: ${message.content}`;
+                        p.innerHTML = `<font color="red">${message.from}</font>:  ${message.content}`;
                         chatMessagesDiv.appendChild(p);
                     });
                     chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
