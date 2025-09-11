@@ -2,11 +2,15 @@ const http = require('http');
 const fs = require('fs');
 const url = require('url');
 var request = require('request');
-
+let MODEL = "qwen3:1.7b";
 const users = {};
 const posts = {};
 const friends = {};
 const friendRequests = {};
+if(process.argv.length > 2) {
+    MODEL = process.argv[2];
+}
+console.log("Using model", MODEL);
 
 // Simple LLM mock
 const mockLLM = (prompt) => {
@@ -98,8 +102,8 @@ const handleRequest = async (req, res) => {
         const index = friendRequests[user].indexOf(requester);
         if (index > -1) {
             friendRequests[user].splice(index, 1);
-            friends[user].push(requester);
-            friends[requester].push(user);
+            if (!friends[user].includes(requester)) friends[user].push(requester);
+            if (!friends[requester].includes(user)) friends[requester].push(user);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Friend request accepted', apiCallCounts }));
         } else {
@@ -240,7 +244,7 @@ const handleRequest = async (req, res) => {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        "model": "qwen3:1.7b",
+                        "model": MODEL,
                         "prompt": prompt + ". Do not use any special characters other than # in the response.",
                         "stream": false,
                         "think": false
@@ -275,7 +279,7 @@ const handleRequest = async (req, res) => {
                 try {
                     const ollamaResponse = await new Promise((resolve, reject) => {
                         const postData = JSON.stringify({
-                            model: "qwen3:1.7b",
+                            model: MODEL,
                             prompt: prompt + ". Do not use any special characters other than # in the response.",
                             stream: false,
                             think: false
