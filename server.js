@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const url = require('url');
+var request = require('request');
 
 const users = {};
 const posts = {};
@@ -38,7 +39,7 @@ const handleRequest = async (req, res) => {
     const query = parsedUrl.query;
 
     // Increment call count for this path
-    if(path!="/ollama-prompt") {
+    if (path != "/ollama-prompt") {
         apiCallCounts[path] = (apiCallCounts[path] || 0) + 1;
     }
 
@@ -74,8 +75,8 @@ const handleRequest = async (req, res) => {
         const results = Object.keys(users).filter(u =>
             u.toLowerCase().startsWith(queryTerm) && u !== currentUser && !friends[currentUser].includes(u)
         );
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ results, apiCallCounts }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ results, apiCallCounts }));
     } else if (path === '/friend-request') {
         const { from, to } = query;
         console.log(`Friend request from ${from} to ${to}`);
@@ -89,8 +90,8 @@ const handleRequest = async (req, res) => {
         }
     } else if (path === '/get-friend-requests') {
         const { user } = query;
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ requests: friendRequests[user] || [], apiCallCounts }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ requests: friendRequests[user] || [], apiCallCounts }));
     } else if (path === '/accept-friend-request') {
         const { user, requester } = query;
         console.log(`Accepting friend request from ${requester} to ${user}`);
@@ -107,8 +108,8 @@ const handleRequest = async (req, res) => {
         }
     } else if (path === '/get-friends') {
         const { user } = query;
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ friends: friends[user] || [], apiCallCounts }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ friends: friends[user] || [], apiCallCounts }));
     } else if (path === '/create-post') {
         const { user, content } = query;
         if (users[user] && content) {
@@ -128,9 +129,17 @@ const handleRequest = async (req, res) => {
                 posts[friend].forEach(post => feedPosts.push({ user: friend, ...post }));
             }
         });
-        feedPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ feed: feedPosts, apiCallCounts }));
+        // Sort by number of comments (descending), then by timestamp (descending) as tiebreaker
+        feedPosts.sort((a, b) => {
+            const commentsA = Array.isArray(a.comments) ? a.comments.length : 0;
+            const commentsB = Array.isArray(b.comments) ? b.comments.length : 0;
+            if (commentsB !== commentsA) {
+                return commentsB - commentsA;
+            }
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ feed: feedPosts, apiCallCounts }));
     } else if (path === '/llm-prompt') {
         const { prompt } = query;
         if (prompt) {
@@ -158,7 +167,7 @@ const handleRequest = async (req, res) => {
             const message = { from, content, timestamp: new Date().toISOString() };
             messages[from][to].push(message);
             messages[to][from].push(message); // Store for both users
-            console.log("messages after sending",messages);
+            console.log("messages after sending", messages);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Message sent', apiCallCounts }));
@@ -168,10 +177,10 @@ const handleRequest = async (req, res) => {
         }
     } else if (path === '/get-messages') {
         const { user, friend } = query;
-        console.log("all messages",messages);
+        console.log("all messages", messages);
         const chat = (messages[user] && messages[user][friend]) || [];
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ chat, apiCallCounts }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ chat, apiCallCounts }));
     } else if (path === '/add-comment') {
         const { postId, user, comment } = query;
         const postOwner = Object.keys(posts).find(owner =>
@@ -220,13 +229,54 @@ const handleRequest = async (req, res) => {
                 body += chunk.toString();
             });
             req.on('end', async () => {
-                const { prompt, gender, profession, type } = JSON.parse(body);
-                apiCallCounts[path+"-"+type] = (apiCallCounts[path+"-"+type] || 0) + 1;
+                let { prompt, gender, profession, type } = JSON.parse(body);
+                prompt = prompt.split("\n").join(" ").split("\"").join("'");
+                apiCallCounts[path + "-" + type] = (apiCallCounts[path + "-" + type] || 0) + 1;
+                var request = require('request');
+                var options = {
+                    'method': 'POST',
+                    'url': 'http://localhost:11434/api/generate',
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "model": "qwen3:1.7b",
+                        "prompt": prompt + ". Do not use any special characters other than # in the response.",
+                        "stream": false,
+                        "think": false
+                    })
+
+                };
+                request(options, function (error, response) {
+                    if (error) {
+                        console.error('Ollama request failed:', error);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'LLM request failed', apiCallCounts }));
+                    } else {
+                        //console.log("raw from llm", response.body);
+                        let llmResp = JSON.parse(response.body).response;
+                        console.log("from llm", llmResp);
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ response: llmResp, apiCallCounts }));
+                    }
+                });
+            });
+        };
+    } else if (path === '/ollama-prompt-old') {
+        if (req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => {
+                body += chunk.toString();
+            });
+            req.on('end', async () => {
+                let { prompt, gender, profession, type } = JSON.parse(body);
+                prompt = prompt.split("\n").join(" ").split("\"").join("'");
+                apiCallCounts[path + "-" + type] = (apiCallCounts[path + "-" + type] || 0) + 1;
                 try {
                     const ollamaResponse = await new Promise((resolve, reject) => {
                         const postData = JSON.stringify({
                             model: "qwen3:1.7b",
-                            prompt: prompt,
+                            prompt: prompt + ". Do not use any special characters other than # in the response.",
                             stream: false,
                             think: false
                         });
@@ -251,11 +301,11 @@ const handleRequest = async (req, res) => {
                                 try {
                                     const jsonResponse = JSON.parse(data);
                                     let fromLLM = jsonResponse.response;
-                                    console.log("response from llm", fromLLM);
+                                    console.log("response from llm", data);
                                     olderContentJson.push({ prompt, response: fromLLM, gender, profession });
                                     resolve(fromLLM);
                                 } catch (e) {
-                                    reject(new Error('Failed to parse Ollama response'));
+                                    reject(new Error('Failed to parse Ollama response ' + e.message));
                                 }
                             });
                         });

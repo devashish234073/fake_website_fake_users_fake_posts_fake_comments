@@ -1,0 +1,23 @@
+{
+  "name": "fake_website_fake_users_fake_posts_fake_comments",
+  "version": "1.0.0",
+  "description": "This is a nodejs application that serves a minimal social medial like app, with the html having a copilot that every few seconds create new post by asking llm to create one, or searching and sending friend request or adding comment by sending the ollama model the context of the post",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devashish234073/fake_website_fake_users_fake_posts_fake_comments.git"
+  },
+  "author": "Devashish Priyadarshi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/devashish234073/fake_website_fake_users_fake_posts_fake_comments/issues"
+  },
+  "homepage": "https://github.com/devashish234073/fake_website_fake_users_fake_posts_fake_comments#readme",
+  "dependencies": {
+    "request": "^2.88.2"
+  }
+}

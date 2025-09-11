@@ -681,7 +681,7 @@
             // Action 2: Create a post using an LLM idea
             createLLMPost: async () => {
                 console.log("Copilot: Asking LLM for a post idea...");
-                const topics = ["Technology", "Nature", "love", "innovation", "politics", "geography", "Partying", "motivation", "fitness", "health", "travel", "shorts video addiction", "beauty products"];
+                const topics = ["Technology", "Nature", "innovation", "politics", "geography", "Partying", "motivation", "fitness", "health", "travel", "shorts video addiction", "beauty products", "an incident on train", "a shocking incident on govt office", "confession", "job update", "relationship update", "movie review"];
                 let topic = topics[Math.floor(Math.random() * topics.length)];
                 const llmPrompt = `You are a ${profession} who is a ${gender === 'M' ? 'male' : 'female'}. Write a short, personal post (under 60 words) on the topic of "${topic}" for a social media feed. The post should sound like a real person, not a bot. Do not use hashtags that are direct copies of the profession or gender.`;
                 const res = await fetch('/ollama-prompt', {
@@ -714,12 +714,24 @@
                         body: JSON.stringify({ prompt: llmPrompt, type: "comment"})
                     });
                     const llmData = await llmRes.json();
-                    const commentContent = llmData.response.trim().replace(/^"|"$/g, '');
+                    let commentContent = '';
+                    try {
+                        commentContent = (llmData.response && typeof llmData.response.trim === 'function')
+                            ? llmData.response.trim().replace(/^"|"$/g, '')
+                            : String(llmData.response || '');
+                    } catch (e) {
+                        commentContent = '';
+                        console.error('Error trimming llmData.response for comment:', e, llmData.response);
+                    }
 
-                    const commentRes = await fetch(`/add-comment?postId=${postToComment.timestamp}&user=${currentUser}&comment=${encodeURIComponent(commentContent)}`);
-                    const commentData = await commentRes.json();
-                    console.log(`Copilot: Commented on a post from ${postToComment.user}.`, commentData.message);
-                    getFeed();
+                    if (commentContent && commentContent.trim() !== '') {
+                        const commentRes = await fetch(`/add-comment?postId=${postToComment.timestamp}&user=${currentUser}&comment=${encodeURIComponent(commentContent)}`);
+                        const commentData = await commentRes.json();
+                        console.log(`Copilot: Commented on a post from ${postToComment.user}.`, commentData.message);
+                        getFeed();
+                    } else {
+                        console.log('Copilot: LLM did not generate a valid comment, skipping add-comment.');
+                    }
                 } else {
                     console.log("Copilot: No friends' posts to comment on.");
                 }
@@ -737,17 +749,19 @@
                 const friendsWithNewMessages = [];
 
                 // Find friends who have sent the last message
+                let chatHistory = {};
                 for (const friend of friendsData.friends) {
                     const chatRes = await fetch(`/get-messages?user=${currentUser}&friend=${friend}`);
                     const chatData = await chatRes.json();
                     const chat = chatData.chat;
-
+                    chatHistory[friend] = chat;
                     if (chat.length > 0) {
                         const lastMessage = chat[chat.length - 1];
                         if (lastMessage.from === friend) {
                             friendsWithNewMessages.push({
                                 name: friend,
-                                lastMessage: lastMessage.content
+                                lastMessage: lastMessage.content,
+                                fullChat: chat
                             });
                         }
                     }
@@ -757,19 +771,46 @@
                 let llmPrompt;
 
                 if (friendsWithNewMessages.length > 0) {
-                    // Step 2: If there are new messages, pick one friend and reply to their message
-                    const replyTarget = friendsWithNewMessages[Math.floor(Math.random() * friendsWithNewMessages.length)];
-                    friendToMessage = replyTarget.name;
-                    const lastMessageContent = replyTarget.lastMessage;
+                    // Only reply if the last message is from the other person
+                    const validReplies = friendsWithNewMessages.filter(rt => {
+                        const chat = rt.fullChat;
+                        if (!chat.length) return false;
+                        const lastMsg = chat[chat.length - 1];
+                        return lastMsg.from !== currentUser;
+                    });
+                    if (validReplies.length === 0) {
+                        // No valid messages to reply to, fallback to starting a new chat
+                        if (friendsData.friends.length > 0) {
+                            friendToMessage = friendsData.friends[Math.floor(Math.random() * friendsData.friends.length)];
+                            const fullChat = chatHistory[friendToMessage] || [];
+                            let chatHistoryStr = fullChat.length > 0 ? fullChat.map(m => `${m.from}: ${m.content}`).join('\n') : "No previous messages.";
+                            console.log(`Copilot: No valid new messages found. Starting a new chat with ${friendToMessage}.`);
+                            llmPrompt = `You are ${currentUser} (the sender of the new message), starting a chat with your friend ${friendToMessage}.\nHere is your full chat history:\n${chatHistoryStr}\n\nWrite a friendly and informal message (under 40 words) to your friend. The message should sound like a genuine person.`;
+                        } else {
+                            console.log("Copilot: No friends to message.");
+                            return;
+                        }
+                    } else {
+                        // Step 2: If there are valid new messages, pick one friend and reply to their message
+                        const replyTarget = validReplies[Math.floor(Math.random() * validReplies.length)];
+                        friendToMessage = replyTarget.name;
+                        const lastMessageContent = replyTarget.lastMessage;
+                        const fullChat = replyTarget.fullChat;
 
-                    console.log(`Copilot: Replying to a message from ${friendToMessage}. Last message was: "${lastMessageContent}"`);
-                    llmPrompt = `You are ${currentUser}, an ${profession}. Your friend, ${friendToMessage}, just sent you the following message: "${lastMessageContent}". Write a short, natural reply (under 40 words) to continue the conversation.`;
+                        // Build chat history string
+                        let chatHistoryStr = fullChat.map(m => `${m.from}: ${m.content}`).join('\n');
+
+                        console.log(`Copilot: Replying to a message from ${friendToMessage}. Last message was: "${lastMessageContent}"`);
+                        llmPrompt = `You are ${currentUser} (the sender of the new message), replying to your friend ${friendToMessage}.\nHere is your full chat history:\n${chatHistoryStr}\n\nYour friend just sent: "${lastMessageContent}". Write a short, natural reply (under 40 words) to continue the conversation.`;
+                    }
                 } else {
                     // Step 3: If no new messages, continue with the existing logic of messaging a random friend
                     if (friendsData.friends.length > 0) {
                         friendToMessage = friendsData.friends[Math.floor(Math.random() * friendsData.friends.length)];
+                        const fullChat = chatHistory[friendToMessage] || [];
+                        let chatHistoryStr = fullChat.length > 0 ? fullChat.map(m => `${m.from}: ${m.content}`).join('\n') : "No previous messages.";
                         console.log(`Copilot: No new messages found. Starting a new chat with ${friendToMessage}.`);
-                        llmPrompt = `You are ${currentUser}, an ${profession}. Write a friendly and informal message (under 40 words) to your friend, ${friendToMessage}. The message should sound like a genuine person.`;
+                        llmPrompt = `You are ${currentUser} (the sender of the new message), starting a chat with your friend ${friendToMessage}.\nHere is your full chat history:\n${chatHistoryStr}\n\nWrite a friendly and informal message (under 40 words) to your friend. The message should sound like a genuine person.`;
                     } else {
                         console.log("Copilot: No friends to message.");
                         return; // Exit the function if there are no friends
@@ -800,7 +841,7 @@
                     const llmRes = await fetch('/ollama-prompt', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: llmPrompt, type: "message" })
+                        body: JSON.stringify({ prompt: llmPrompt.split("\n").join(" "), type: "message" })
                     });
                     const llmData = await llmRes.json();
                     const messageContent = llmData.response.trim().replace(/^"|"$/g, '');
