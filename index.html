@@ -302,10 +302,13 @@
 
     <script>
         let currentUser = null;
+        function $(selector) {
+            return document.querySelector(selector);
+        }
 
         let apiCountsExpanded = true;
         const updateApiCallCounts = (counts) => {
-            const display = document.getElementById('apiCallCountsDisplay');
+            const display = $('#apiCallCountsDisplay');
             if (!counts) { display.textContent = 'No data.'; return; }
             display.innerHTML = `<table style='width:100%;border-collapse:collapse;'>` +
                 Object.entries(counts).map(([path, count]) =>
@@ -314,33 +317,35 @@
         };
 
         function toggleApiCountsPopup() {
-            const popup = document.getElementById('apiCallCountsPopup');
-            const btn = document.getElementById('toggleApiCountsBtn');
+            const popup = $('#apiCallCountsPopup');
+            const btn = $('#toggleApiCountsBtn');
             apiCountsExpanded = !apiCountsExpanded;
+            // Save state to sessionStorage
+            sessionStorage.setItem('apiCallCountsVisible', apiCountsExpanded ? 'true' : 'false');
             if (apiCountsExpanded) {
                 popup.style.height = '';
                 popup.style.minHeight = '80px';
                 popup.style.maxHeight = '';
-                document.getElementById('apiCallCountsDisplay').style.display = '';
+                $('#apiCallCountsDisplay').style.display = '';
                 btn.textContent = 'Hide';
             } else {
                 popup.style.height = '38px';
                 popup.style.minHeight = '38px';
                 popup.style.maxHeight = '38px';
-                document.getElementById('apiCallCountsDisplay').style.display = 'none';
+                $('#apiCallCountsDisplay').style.display = 'none';
                 btn.textContent = 'Show';
             }
         }
 
         window.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('toggleApiCountsBtn').onclick = toggleApiCountsPopup;
+            $('#toggleApiCountsBtn').onclick = toggleApiCountsPopup;
         });
 
         const updateUI = () => {
-            document.getElementById('app').style.display = currentUser ? 'flex' : 'none';
-            document.getElementById('loginMessage').style.display = currentUser ? 'none' : 'block';
+            $('#app').style.display = currentUser ? 'flex' : 'none';
+            $('#loginMessage').style.display = currentUser ? 'none' : 'block';
             if (currentUser) {
-                document.getElementById('currentUser').textContent = 'Logged in as: ' + currentUser;
+                $('#currentUser').textContent = 'Logged in as: ' + currentUser;
                 getFriends();
                 getFriendRequests();
                 getFeed();
@@ -379,11 +384,11 @@
         };
 
         const searchUsers = () => {
-            const query = document.getElementById('searchInput').value;
+            const query = $('#searchInput').value;
             fetch(`/search?query=${query}&user=${currentUser}`)
                 .then(res => res.json())
                 .then(data => {
-                    const resultsList = document.getElementById('searchResults');
+                    const resultsList = $('#searchResults');
                     resultsList.innerHTML = '';
                     data.results.forEach(user => {
                         const li = document.createElement('li');
@@ -411,7 +416,7 @@
             fetch(`/get-friend-requests?user=${currentUser}`)
                 .then(res => res.json())
                 .then(data => {
-                    const requestsList = document.getElementById('friendRequests');
+                    const requestsList = $('#friendRequests');
                     requestsList.innerHTML = '';
                     data.requests.forEach(requester => {
                         const li = document.createElement('li');
@@ -442,7 +447,7 @@
             fetch(`/get-friends?user=${currentUser}`)
                 .then(res => res.json())
                 .then(data => {
-                    const friendsList = document.getElementById('friendList');
+                    const friendsList = $('#friendList');
                     friendsList.innerHTML = '';
                     data.friends.forEach(friend => {
                         const li = document.createElement('li');
@@ -458,25 +463,25 @@
         };
 
         const createPost = () => {
-            const content = document.getElementById('postContent').value;
+            const content = $('#postContent').value;
             if (content.trim()) {
                 fetch(`/create-post?user=${currentUser}&content=${encodeURIComponent(content)}`)
                     .then(res => res.json())
                     .then(data => {
-                        document.getElementById('postContent').value = '';
+                        $('#postContent').value = '';
                         getFeed();
                         updateApiCallCounts(data.apiCallCounts);
-                    });
+                });
             }
         };
 
         /*const generatePostFromLLM = () => {
-            const prompt = document.getElementById('llmPrompt').value;
+            const prompt = $('#llmPrompt').value;
             if (prompt.trim()) {
                 fetch(`/llm-prompt?prompt=${encodeURIComponent(prompt)}`)
                     .then(res => res.json())
                     .then(data => {
-                        document.getElementById('postContent').value = data.response;
+                        $('#postContent').value = data.response;
                     });
             }
         };*/
@@ -485,7 +490,7 @@
             fetch(`/get-feed?user=${currentUser}`)
                 .then(res => res.json())
                 .then(data => {
-                    const feedList = document.getElementById('feed');
+                    const feedList = $('#feed');
                     feedList.innerHTML = '';
                     data.feed.forEach(post => {
                         const li = document.createElement('li');
@@ -500,7 +505,7 @@
             fetch(`/get-feed?user=${currentUser}`)
                 .then(res => res.json())
                 .then(data => {
-                    const feedList = document.getElementById('feed');
+                    const feedList = $('#feed');
                     feedList.innerHTML = '';
                     data.feed.forEach(post => {
                         const li = document.createElement('li');
@@ -542,7 +547,7 @@
         };
 
         const toggleMyData = () => {
-            const section = document.getElementById('myDataSection');
+            const section = $('#myDataSection');
             const header = document.querySelector('.my-data-container h2');
             if (section.style.display === 'none') {
                 fetchMyData();
@@ -559,7 +564,7 @@
                 .then(res => res.json())
                 .then(data => {
                     // Render My Posts
-                    const myPostsList = document.getElementById('myPostsList');
+                    const myPostsList = $('#myPostsList');
                     myPostsList.innerHTML = '';
                     data.myPosts.forEach(post => {
                         const li = document.createElement('li');
@@ -582,7 +587,7 @@
                 `;
                         myPostsList.appendChild(li);
                     });
-                    const notificationsList = document.getElementById('notificationsList');
+                    const notificationsList = $('#notificationsList');
                     notificationsList.innerHTML = '';
                     data.notifications.forEach(notification => {
                         const li = document.createElement('li');
@@ -598,13 +603,13 @@
 
         const openChat = (friend) => {
             currentChatFriend = friend;
-            document.getElementById('chatWindow').style.display = 'flex';
-            document.getElementById('chatFriendName').textContent = friend;
+            $('#chatWindow').style.display = 'flex';
+            $('#chatFriendName').textContent = friend;
             loadChatMessages();
         };
 
         const closeChat = () => {
-            document.getElementById('chatWindow').style.display = 'none';
+            $('#chatWindow').style.display = 'none';
             currentChatFriend = null;
         };
 
@@ -614,7 +619,7 @@
                 .then(res => res.json())
                 .then(data => {
                     console.log("got messages", data);
-                    const chatMessagesDiv = document.getElementById('chatMessages');
+                    const chatMessagesDiv = $('#chatMessages');
                     chatMessagesDiv.innerHTML = '';
                     data.chat.forEach(message => {
                         const p = document.createElement('p');
@@ -626,12 +631,12 @@
         };
 
         const sendMessage = () => {
-            const messageContent = document.getElementById('messageInput').value;
+            const messageContent = $('#messageInput').value;
             if (messageContent.trim() && currentChatFriend) {
                 fetch(`/send-message?from=${currentUser}&to=${currentChatFriend}&content=${encodeURIComponent(messageContent)}`)
                     .then(res => res.json())
                     .then(() => {
-                        document.getElementById('messageInput').value = '';
+                        $('#messageInput').value = '';
                         loadChatMessages(); // Refresh chat
                     });
             }
@@ -681,7 +686,7 @@
             // Action 2: Create a post using an LLM idea
             createLLMPost: async () => {
                 console.log("Copilot: Asking LLM for a post idea...");
-                const topics = ["Technology", "Nature", "innovation", "politics", "geography", "Partying", "motivation", "fitness", "health", "travel", "shorts video addiction", "beauty products", "an incident on train", "a shocking incident on govt office", "confession", "job update", "relationship update", "movie review"];
+                const topics = ["Technology", "innovation", "politics", "shorts video addiction", "beauty products", "an incident on train", "a shocking incident on govt office", "confession", "job update", "relationship update", "movie review", "bad shopping experience online", "job crisis", "vibe coding taking over creativity", "world superpower dynamics", "big companies monopoly", "OS monopoly", "open source breaches"];
                 let topic = topics[Math.floor(Math.random() * topics.length)];
                 const llmPrompt = `You are a ${profession} who is a ${gender === 'M' ? 'male' : 'female'}. Write a short, personal post (under 60 words) on the topic of "${topic}" for a social media feed. The post should sound like a real person, not a bot. Do not use hashtags that are direct copies of the profession or gender.`;
                 const res = await fetch('/ollama-prompt', {

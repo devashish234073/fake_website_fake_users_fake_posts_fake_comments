@@ -260,6 +260,7 @@ const handleRequest = async (req, res) => {
                         //console.log("raw from llm", response.body);
                         let llmResp = JSON.parse(response.body).response;
                         console.log("from llm", llmResp);
+                        olderContentJson.push({ prompt, response: llmResp, gender, profession });
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ response: llmResp, apiCallCounts }));
                     }
@@ -341,6 +342,7 @@ const handleRequest = async (req, res) => {
 };
 
 setInterval(() => {
+    console.log("saving to posts.json");
     fs.writeFileSync("posts.json", JSON.stringify(olderContentJson, null, 2));
 }, 60000);
 
