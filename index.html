@@ -312,7 +312,7 @@
             if (!counts) { display.textContent = 'No data.'; return; }
             display.innerHTML = `<table style='width:100%;border-collapse:collapse;'>` +
                 Object.entries(counts).map(([path, count]) =>
-                    `<tr><td style='padding:2px 6px;border-bottom:1px solid #eee;'><b style='color:${path.indexOf("ollama")>-1?"blue":"#333"};'>${path}</b></td><td style='padding:2px 6px;text-align:right;color:#1877f2;'>${count}</td></tr>`
+                    `<tr><td style='padding:2px 6px;border-bottom:1px solid #eee;'><b style='color:${path.indexOf("ollama") > -1 ? "blue" : "#333"};'>${path}</b></td><td style='padding:2px 6px;text-align:right;color:#1877f2;'>${count}</td></tr>`
                 ).join('') + `</table>`;
         };
 
@@ -471,7 +471,7 @@
                         $('#postContent').value = '';
                         getFeed();
                         updateApiCallCounts(data.apiCallCounts);
-                });
+                    });
             }
         };
 
@@ -709,14 +709,36 @@
                 const res = await fetch(`/get-feed?user=${currentUser}`);
                 const data = await res.json();
                 if (data.feed.length > 0) {
-                    const postToComment = data.feed[Math.floor(Math.random() * data.feed.length)];
+                    let postToComment = data.feed[Math.floor(Math.random() * data.feed.length)];
+                    console.log("postToComment", postToComment);
+                    let existingComments = "";
+                    if (postToComment?.comments?.length) {
+                        let lastComment = postToComment.comments[postToComment.comments.length - 1];
+                        let lastCommentUser = lastComment.user;
+                        if (lastCommentUser == currentUser) {
+                            console.log("Copilot: Last comment on this post is already by you, picking another post.");
+                            postToComment = data.feed[Math.floor(Math.random() * data.feed.length)];
+                            console.log("new postToComment picked", postToComment);
+                            if (postToComment?.comments?.length) {
+                                let lastComment = postToComment.comments[postToComment.comments.length - 1];
+                                let lastCommentUser = lastComment.user;
+                                if (lastCommentUser == currentUser) {
+                                    console.log("Copilot: Last comment on this post ALSO is already by you, skipping.");
+                                    return;
+                                }
+                                existingComments = " Understand context based on these comments, see if you already have a comment here, do not repeat same/similar stuff." + postToComment.comments.map(c => `${c.user}: ${c.comment}`).join('; ');
+                            }
+                        } else {
+                            existingComments = " Understand context based on these comments, see if you already have a comment here, do not repeat same/similar stuff." + postToComment.comments.map(c => `${c.user}: ${c.comment}`).join('; ');
+                        }
+                    }
                     //const llmPrompt = `You are ${currentUser}. Write a short comment (under 40 words) in reply to this post: "${postToComment.content}". Include the existing comments for context: ${JSON.stringify(postToComment.comments)}`;
-                    const llmPrompt = `You are ${currentUser}, a ${profession}. A friend named ${postToComment.user} posted this: "${postToComment.content}". Write a concise and natural-sounding comment (under 40 words) that responds to their post. Do not copy their post content or hashtags. Focus on building a connection or adding a new thought.`;
+                    const llmPrompt = `You are ${currentUser}, a ${profession}. A friend named ${postToComment.user} posted this: "${postToComment.content}". Write a concise and natural-sounding comment (under 40 words) that responds to their post. Do not copy their post content or hashtags. Focus on building a connection or adding a new thought. ${existingComments}`;
 
                     const llmRes = await fetch('/ollama-prompt', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: llmPrompt, type: "comment"})
+                        body: JSON.stringify({ prompt: llmPrompt, type: "comment" })
                     });
                     const llmData = await llmRes.json();
                     let commentContent = '';
@@ -886,7 +908,7 @@
     <script>
         sessionStorage.setItem('reload_after_15_second', true);
         setTimeout(function () {
-            if(sessionStorage.getItem('reload_after_15_second')) {
+            if (sessionStorage.getItem('reload_after_15_second')) {
                 location.reload();
             }
         }, 15000);
